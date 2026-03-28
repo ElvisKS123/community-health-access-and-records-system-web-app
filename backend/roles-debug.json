@@ -1,0 +1,30 @@
+[
+  {
+    "email": "admin1@kacyiruhc.rw",
+    "role": "admin"
+  },
+  {
+    "email": "elvis@kacyiruhc.rw",
+    "role": "receptionist"
+  },
+  {
+    "email": "kagabaelvis@kacyiruhc.rw",
+    "role": "receptionist"
+  },
+  {
+    "email": "kagaba@kacyiruhc.rw",
+    "role": "doctor"
+  },
+  {
+    "email": "admin@nyamirambohc.rw",
+    "role": "admin"
+  },
+  {
+    "email": "kagaba@nyamirambohc.rw",
+    "role": "receptionist"
+  },
+  {
+    "email": "elvis@nyamirambohc.rw",
+    "role": "doctor"
+  }
+]

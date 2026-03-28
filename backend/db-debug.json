@@ -1,0 +1,117 @@
+--- USERS TABLE ---
+[
+  {
+    "id": 9,
+    "email": "admin1@kacyiruhc.rw",
+    "role": "admin",
+    "clinic_id": null
+  },
+  {
+    "id": 10,
+    "email": "elvis@kacyiruhc.rw",
+    "role": "receptionist",
+    "clinic_id": null
+  },
+  {
+    "id": 11,
+    "email": "kagabaelvis@kacyiruhc.rw",
+    "role": "receptionist",
+    "clinic_id": null
+  },
+  {
+    "id": 12,
+    "email": "kagaba@kacyiruhc.rw",
+    "role": "doctor",
+    "clinic_id": null
+  },
+  {
+    "id": 13,
+    "email": "admin@nyamirambohc.rw",
+    "role": "admin",
+    "clinic_id": 10
+  },
+  {
+    "id": 14,
+    "email": "kagaba@nyamirambohc.rw",
+    "role": "receptionist",
+    "clinic_id": 10
+  },
+  {
+    "id": 15,
+    "email": "elvis@nyamirambohc.rw",
+    "role": "doctor",
+    "clinic_id": 10
+  }
+]
+
+--- CLINICS TABLE ---
+[
+  {
+    "id": 1,
+    "name": "ELVIS Health Center"
+  },
+  {
+    "id": 5,
+    "name": "KAGABA Elvis Community Health Center"
+  },
+  {
+    "id": 6,
+    "name": "city of kigali Health Center"
+  },
+  {
+    "id": 7,
+    "name": "Kacyiru Health Center"
+  },
+  {
+    "id": 9,
+    "name": "admin@kacyiruhc.rw"
+  },
+  {
+    "id": 10,
+    "name": "Nyamirambo Health Center"
+  }
+]
+
+--- ASSIGNMENTS TABLE ---
+[
+  {
+    "id": 1,
+    "patient_id": 6,
+    "doctor_id": null,
+    "status": "assigned",
+    "notes": null,
+    "assigned_at": "2026-03-21T11:50:57.173Z",
+    "completed_at": null,
+    "clinic_id": null
+  },
+  {
+    "id": 2,
+    "patient_id": 7,
+    "doctor_id": 15,
+    "status": "assigned",
+    "notes": null,
+    "assigned_at": "2026-03-26T18:20:49.477Z",
+    "completed_at": null,
+    "clinic_id": 10
+  },
+  {
+    "id": 3,
+    "patient_id": 8,
+    "doctor_id": 15,
+    "status": "assigned",
+    "notes": null,
+    "assigned_at": "2026-03-26T19:28:52.833Z",
+    "completed_at": null,
+    "clinic_id": 10
+  },
+  {
+    "id": 4,
+    "patient_id": 6,
+    "doctor_id": 12,
+    "status": "assigned",
+    "notes": null,
+    "assigned_at": "2026-03-27T13:55:31.070Z",
+    "completed_at": null,
+    "clinic_id": null
+  }
+]

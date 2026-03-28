@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-headline: "Manrope", sans-serif;
+  
+  --color-primary: #00450d;
+  --color-secondary-container: #cae8c2;
+  --color-on-secondary-fixed: #082009;
+  --color-tertiary-fixed-dim: #ffb1c8;
+  --color-secondary-fixed-dim: #b1cfaa;
+  --color-surface-dim: #d9dadb;
+  --color-surface-variant: #e1e3e4;
+  --color-tertiary: #6b1d3d;
+  --color-surface-bright: #f8f9fa;
+  --color-inverse-surface: #2e3132;
+  --color-secondary-fixed: #cdebc5;
+  --color-outline: #717a6d;
+  --color-error: #ba1a1a;
+  --color-primary-container: #1b5e20;
+  --color-on-tertiary-fixed: #3e001d;
+  --color-surface-tint: #2a6b2c;
+  --color-on-surface: #191c1d;
+  --color-on-tertiary-fixed-variant: #7a2949;
+  --color-on-primary-fixed: #002203;
+  --color-on-primary-container: #90d689;
+  --color-primary-fixed: #acf4a4;
+  --color-inverse-on-surface: #f0f1f2;
+  --color-error-container: #ffdad6;
+  --color-on-tertiary: #ffffff;
+  --color-on-primary: #ffffff;
+  --color-outline-variant: #c0c9bb;
+  --color-on-secondary-container: #4f694b;
+  --color-surface-container-high: #e7e8e9;
+  --color-tertiary-fixed: #ffd9e2;
+  --color-background: #f8f9fa;
+  --color-secondary: #4b6547;
+  --color-tertiary-container: #883454;
+  --color-on-error-container: #93000a;
+  --color-on-secondary-fixed-variant: #344d31;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-background: #191c1d;
+  --color-surface: #f8f9fa;
+  --color-surface-container-highest: #e1e3e4;
+  --color-inverse-primary: #91d78a;
+  --color-on-secondary: #ffffff;
+  --color-on-primary-fixed-variant: #0c5216;
+  --color-surface-container: #edeeef;
+  --color-on-error: #ffffff;
+  --color-surface-container-low: #f3f4f5;
+  --color-primary-fixed-dim: #91d78a;
+  --color-on-surface-variant: #41493e;
+  --color-on-tertiary-container: #ffaec6;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-background text-on-surface antialiased;
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
+
+.glass-nav {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.tonal-depth {
+  box-shadow: 0 10px 30px rgba(25, 28, 29, 0.04);
+}
+
+.ambient-shadow {
+  box-shadow: 0 10px 30px rgba(25, 28, 29, 0.04);
+}
