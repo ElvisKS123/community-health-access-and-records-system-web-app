@@ -18,12 +18,24 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AUTH_USER_KEY = 'chars_user';
 
 const loadStoredAuth = () => {
   try {
-    const token = localStorage.getItem('chars_token');
-    const userRaw = localStorage.getItem('chars_user');
+    const token = sessionStorage.getItem('chars_token') ?? localStorage.getItem('chars_token');
+    const userRaw = sessionStorage.getItem(AUTH_USER_KEY) ?? localStorage.getItem(AUTH_USER_KEY);
     const user = userRaw ? (JSON.parse(userRaw) as AuthUser) : null;
+
+    if (token) {
+      sessionStorage.setItem('chars_token', token);
+      localStorage.removeItem('chars_token');
+    }
+
+    if (userRaw) {
+      sessionStorage.setItem(AUTH_USER_KEY, userRaw);
+      localStorage.removeItem(AUTH_USER_KEY);
+    }
+
     return { token, user };
   } catch {
     return { token: null, user: null };
@@ -33,9 +45,11 @@ const loadStoredAuth = () => {
 const saveStoredUser = (user: AuthUser | null) => {
   try {
     if (user) {
-      localStorage.setItem('chars_user', JSON.stringify(user));
+      sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+      localStorage.removeItem(AUTH_USER_KEY);
     } else {
-      localStorage.removeItem('chars_user');
+      sessionStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(AUTH_USER_KEY);
     }
   } catch {
     // Ignore storage errors

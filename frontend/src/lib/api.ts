@@ -1,4 +1,13 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const AUTH_TOKEN_KEY = 'chars_token';
+
+const readStorageItem = (key: string): string | null => {
+  try {
+    return sessionStorage.getItem(key) ?? localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
 
 export type ApiError = {
   status: number;
@@ -7,24 +16,22 @@ export type ApiError = {
 };
 
 export const getAuthToken = (): string | null => {
-  try {
-    return localStorage.getItem('chars_token');
-  } catch {
-    return null;
-  }
+  return readStorageItem(AUTH_TOKEN_KEY);
 };
 
 export const setAuthToken = (token: string) => {
   try {
-    localStorage.setItem('chars_token', token);
+    sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
   } catch {
-    // Ignore storage errors (private mode / restricted storage)
+    // Ignore storage errors
   }
 };
 
 export const clearAuthToken = () => {
   try {
-    localStorage.removeItem('chars_token');
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
   } catch {
     // Ignore storage errors
   }
@@ -32,7 +39,9 @@ export const clearAuthToken = () => {
 
 export const clearAuthStorage = () => {
   try {
-    localStorage.removeItem('chars_token');
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    sessionStorage.removeItem('chars_user');
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem('chars_user');
   } catch {
     // Ignore storage errors
