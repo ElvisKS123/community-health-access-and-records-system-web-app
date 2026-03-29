@@ -41,9 +41,6 @@ export default function Login() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-on-surface tracking-tight mb-2 font-headline">Welcome Back</h2>
             <p className="text-on-surface-variant text-sm">Please enter your credentials to access the clinical portal.</p>
-            <p className="text-[11px] text-slate-400 mt-2">
-              Different roles can stay signed in at the same time when opened in separate browser tabs.
-            </p>
           </div>
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-2">
