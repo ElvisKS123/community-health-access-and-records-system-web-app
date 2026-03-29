@@ -234,7 +234,7 @@ app.get("/", (req, res) => res.json({ message: "Welcome to Community Health API"
 app.post("/api/auth/register", authMiddleware, permit('admin', 'receptionist'), validate(registerSchema), async (req, res) => {
   try {
     const { email, password, role, department, fullName } = req.body;
-    const userRole = req.user.role === 'receptionist' ? 'receptionist' : (role || 'receptionist');
+    const userRole = role || 'receptionist';
     const userCheck = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (userCheck.rows.length > 0) return res.status(400).json({ error: "User already exists" });
 
@@ -304,9 +304,6 @@ app.get("/api/users", authMiddleware, permit('admin', 'receptionist'), async (re
   try {
     let query = "SELECT id, full_name, email, role, department, is_active, created_at FROM users WHERE clinic_id IS NOT DISTINCT FROM $1";
     const params = [req.user.clinicId];
-    if (req.user.role === 'receptionist') {
-      query += " AND role = 'receptionist'";
-    }
     query += " ORDER BY created_at DESC";
     const result = await pool.query(query, params);
     res.json(result.rows);
@@ -316,7 +313,7 @@ app.get("/api/users", authMiddleware, permit('admin', 'receptionist'), async (re
   }
 });
 
-app.put("/api/users/:id/status", authMiddleware, permit('admin'), validate(userStatusSchema), async (req, res) => {
+app.put("/api/users/:id/status", authMiddleware, permit('admin', 'receptionist'), validate(userStatusSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { isActive } = req.body;
@@ -333,7 +330,7 @@ app.put("/api/users/:id/status", authMiddleware, permit('admin'), validate(userS
   }
 });
 
-app.put("/api/users/:id/role", authMiddleware, permit('admin'), validate(userRoleSchema), async (req, res) => {
+app.put("/api/users/:id/role", authMiddleware, permit('admin', 'receptionist'), validate(userRoleSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { role } = req.body;
@@ -350,7 +347,7 @@ app.put("/api/users/:id/role", authMiddleware, permit('admin'), validate(userRol
   }
 });
 
-app.post("/api/users/:id/reset-password", authMiddleware, permit('admin'), validate(resetPasswordSchema), async (req, res) => {
+app.post("/api/users/:id/reset-password", authMiddleware, permit('admin', 'receptionist'), validate(resetPasswordSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { password } = req.body;
@@ -361,7 +358,7 @@ app.post("/api/users/:id/reset-password", authMiddleware, permit('admin'), valid
       [hash, id, req.user.clinicId]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: "User not found" });
-    await logAudit(req.user.id, 'UPDATE', 'users', id, { note: 'Password reset by admin' }, req.user.clinicId);
+    await logAudit(req.user.id, 'UPDATE', 'users', id, { note: 'Password reset by staff' }, req.user.clinicId);
     res.json({ message: "Password reset", user: result.rows[0] });
   } catch (err) {
     console.error(err);
@@ -369,7 +366,7 @@ app.post("/api/users/:id/reset-password", authMiddleware, permit('admin'), valid
   }
 });
 
-app.delete("/api/users/:id", authMiddleware, permit('admin'), async (req, res) => {
+app.delete("/api/users/:id", authMiddleware, permit('admin', 'receptionist'), async (req, res) => {
   try {
     const { id } = req.params;
     // Prevent self-deletion

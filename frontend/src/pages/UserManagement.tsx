@@ -15,7 +15,6 @@ type User = {
 
 export default function UserManagement() {
   const { user } = useAuth();
-  const isReceptionist = user?.role === 'receptionist';
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +47,7 @@ export default function UserManagement() {
           fullName: form.fullName,
           email: form.email,
           password: form.password,
-          role: isReceptionist ? 'receptionist' : form.role,
+          role: form.role,
           department: form.department || undefined,
         }),
       });
@@ -119,7 +118,12 @@ export default function UserManagement() {
   };
 
   return (
-    <Layout activeTab="users" title="User Management" userRole="System Administrator" userName="Admin User">
+    <Layout
+      activeTab="users"
+      title="User Management"
+      userRole={user?.role ? user.role.toUpperCase() : undefined}
+      userName={user?.fullName || user?.email || undefined}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-outline-variant/30 p-6">
           <h3 className="font-bold text-green-900 mb-4 font-headline">Create New User</h3>
@@ -155,20 +159,18 @@ export default function UserManagement() {
                 minLength={6}
               />
             </div>
-            {!isReceptionist && (
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-on-surface-variant tracking-wider block">Role</label>
-                <select
-                  className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all outline-none"
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                >
-                  <option value="receptionist">Receptionist</option>
-                  <option value="doctor">Doctor</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-            )}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-on-surface-variant tracking-wider block">Role</label>
+              <select
+                className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all outline-none"
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value as User['role'] })}
+              >
+                <option value="receptionist">Receptionist</option>
+                <option value="doctor">Doctor</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold text-on-surface-variant tracking-wider block">Department</label>
               <input
@@ -210,7 +212,15 @@ export default function UserManagement() {
                     <td className="px-6 py-4 text-sm text-green-900 font-semibold">{user.full_name || '-'}</td>
                     <td className="px-6 py-4 text-sm text-green-900 font-semibold">{user.email}</td>
                     <td className="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-widest">
-                      {user.role}
+                      <select
+                        className="px-3 py-2 bg-surface-container-low rounded-lg text-xs font-bold uppercase tracking-widest outline-none"
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value as User['role'])}
+                      >
+                        <option value="receptionist">receptionist</option>
+                        <option value="doctor">doctor</option>
+                        <option value="admin">admin</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-600">
                       {user.department || '-'}

@@ -58,6 +58,13 @@ type Assignment = {
   status: string | null;
 };
 
+type Doctor = {
+  id: number;
+  full_name?: string | null;
+  email: string;
+  department?: string | null;
+};
+
 type FileItem = {
   id: number;
   filename: string;
@@ -90,14 +97,18 @@ export default function PatientProfile() {
   const [labs, setLabs] = useState<LabResult[]>([]);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [assignmentInfo, setAssignmentInfo] = useState<Assignment | null>(null);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileUpload, setFileUpload] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [assigningDoctor, setAssigningDoctor] = useState(false);
   const [showAddRecord, setShowAddRecord] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [activeTab, setActiveTab] = useState<'records' | 'meds' | 'allergies' | 'imm' | 'problems' | 'triage'>('records');
   const [expandedRecordId, setExpandedRecordId] = useState<number | null>(null);
+  const [selectedDoctorId, setSelectedDoctorId] = useState('');
+  const [assignmentNotes, setAssignmentNotes] = useState('');
   
   const [editForm, setEditForm] = useState({
     fullName: '',
@@ -143,6 +154,7 @@ export default function PatientProfile() {
 
   const { user } = useAuth();
   const isDoctorOrAdmin = user?.role === 'doctor' || user?.role === 'admin';
+  const canManageAssignments = user?.role === 'receptionist' || user?.role === 'admin';
 
   const patientId = useMemo(() => Number(id), [id]);
 
@@ -151,7 +163,7 @@ export default function PatientProfile() {
     setLoading(true);
     setError(null);
     try {
-      const [patientRes, recordRes, fileRes, medsRes, allergyRes, immRes, problemRes, triageRes, labRes, assignmentRes] = await Promise.all([
+      const [patientRes, recordRes, fileRes, medsRes, allergyRes, immRes, problemRes, triageRes, labRes, assignmentRes, doctorsRes] = await Promise.all([
         apiFetch<Patient>(`/api/patients/${patientId}`),
         apiFetch<Record[]>(`/api/patients/${patientId}/records`),
         apiFetch<FileItem[]>(`/api/patients/${patientId}/files`),
@@ -162,6 +174,7 @@ export default function PatientProfile() {
         apiFetch<Triage | null>(`/api/patients/${patientId}/triage/latest`),
         apiFetch<LabResult[]>(`/api/patients/${patientId}/lab-results`),
         apiFetch<Assignment[]>(`/api/assignments`),
+        apiFetch<Doctor[]>(`/api/doctors`),
       ]);
       setPatient(patientRes);
       setLatestTriage(triageRes);
@@ -172,6 +185,7 @@ export default function PatientProfile() {
       setImmunizations(immRes);
       setProblems(problemRes);
       setLabs(labRes);
+      setDoctors(doctorsRes);
       const currentAssignment = assignmentRes.find(
         (assignment) => assignment.patient_id === patientId && assignment.status !== 'completed'
       );
@@ -186,6 +200,11 @@ export default function PatientProfile() {
   useEffect(() => {
     loadData();
   }, [patientId]);
+
+  useEffect(() => {
+    setSelectedDoctorId(assignmentInfo?.doctor_id ? String(assignmentInfo.doctor_id) : '');
+    setAssignmentNotes('');
+  }, [assignmentInfo?.id, assignmentInfo?.doctor_id]);
 
   const handleUpload = async () => {
     if (!fileUpload || !patientId) return;
@@ -382,6 +401,51 @@ export default function PatientProfile() {
     }
   };
 
+  const handleAssignDoctor = async () => {
+    if (!patientId || !selectedDoctorId) {
+      setError('Please select a doctor before assigning.');
+      return;
+    }
+
+    setAssigningDoctor(true);
+    setError(null);
+    try {
+      if (assignmentInfo?.id) {
+        await apiFetch(`/api/assignments/${assignmentInfo.id}/reassign`, {
+          method: 'PUT',
+          body: JSON.stringify({ doctorId: selectedDoctorId }),
+        });
+
+        if (assignmentNotes.trim()) {
+          await apiFetch(`/api/assignments/${assignmentInfo.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+              status: assignmentInfo.status || 'assigned',
+              notes: assignmentNotes.trim(),
+            }),
+          });
+        }
+      } else {
+        await apiFetch('/api/assignments', {
+          method: 'POST',
+          body: JSON.stringify({
+            patientId,
+            doctorId: selectedDoctorId,
+            status: 'assigned',
+            notes: assignmentNotes.trim() || undefined,
+          }),
+        });
+      }
+
+      setAssignmentNotes('');
+      await loadData();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to assign doctor');
+    } finally {
+      setAssigningDoctor(false);
+    }
+  };
+
   return (
     <Layout activeTab="patients" title="Patient Profile">
       {error && <p className="mb-4 text-xs text-error font-semibold">{error}</p>}
@@ -520,6 +584,63 @@ export default function PatientProfile() {
                   <p className="font-semibold text-green-900">{assignmentInfo?.doctor_department || '—'}</p>
                 </div>
               </div>
+              {canManageAssignments && (
+                <div className="mt-5 border-t border-outline-variant/20 pt-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                    <div>
+                      <p className="text-sm font-semibold text-green-900">
+                        {assignmentInfo ? 'Reassign Doctor For Return Visit' : 'Assign Doctor For Return Visit'}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Use this when a patient comes back for treatment and needs to be sent to a doctor again.
+                      </p>
+                    </div>
+                    {assignmentInfo?.status && (
+                      <span className="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[10px] font-bold tracking-widest uppercase">
+                        {assignmentInfo.status}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 items-end">
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold tracking-widest mb-2">
+                        SELECT DOCTOR
+                      </label>
+                      <select
+                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        value={selectedDoctorId}
+                        onChange={(e) => setSelectedDoctorId(e.target.value)}
+                      >
+                        <option value="">Choose doctor</option>
+                        {doctors.map((doctor) => (
+                          <option key={doctor.id} value={doctor.id}>
+                            {(doctor.full_name || doctor.email) + (doctor.department ? ` - ${doctor.department}` : '')}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold tracking-widest mb-2">
+                        RETURN VISIT NOTE
+                      </label>
+                      <input
+                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="Optional note for this assignment"
+                        value={assignmentNotes}
+                        onChange={(e) => setAssignmentNotes(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="px-5 py-3 rounded-xl bg-primary text-white text-xs font-bold tracking-widest shadow-sm hover:bg-primary-container transition-all disabled:opacity-60"
+                      onClick={handleAssignDoctor}
+                      disabled={!selectedDoctorId || assigningDoctor}
+                    >
+                      {assigningDoctor ? 'SAVING...' : assignmentInfo ? 'REASSIGN' : 'ASSIGN'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             {latestTriage && (
               <section className="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden">

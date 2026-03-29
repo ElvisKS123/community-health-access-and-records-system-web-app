@@ -137,7 +137,7 @@ export default function App() {
           path="/admin/users"
           element={
             <RequireAuth>
-              <RequireRole role={['admin']}>
+              <RequireRole role={['admin', 'receptionist']}>
                 <UserManagement />
               </RequireRole>
             </RequireAuth>

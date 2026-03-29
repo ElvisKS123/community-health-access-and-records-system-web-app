@@ -102,12 +102,6 @@ export default function Login() {
               </button>
             </div>
           </form>
-          <div className="mt-8 text-center">
-            <p className="text-sm text-on-surface-variant">
-              Need assistance? 
-              <a className="text-primary-container font-bold hover:underline ml-1" href="#">Contact System Admin</a>
-            </p>
-          </div>
         </div>
       </div>
     </main>
