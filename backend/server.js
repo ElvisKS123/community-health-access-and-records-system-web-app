@@ -669,15 +669,53 @@ app.get("/api/patients/check-national-id", authMiddleware, async (req, res) => {
 });
 
 // Medical Records
-app.get("/api/records", authMiddleware, async (req, res) => {
+app.get("/api/records", authMiddleware, permit('doctor', 'admin'), async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT m.*, p.full_name as patient_name
-      FROM medical_records m
-      JOIN patients p ON m.patient_id = p.id
-      WHERE p.is_active = true AND m.clinic_id IS NOT DISTINCT FROM $1
-      ORDER BY m.date DESC, m.created_at DESC
-    `, [req.user.clinicId]);
+    const clinicId = req.user.clinicId;
+    let result;
+
+    if (req.user.role === 'doctor') {
+      const userRes = await pool.query(
+        "SELECT full_name, email FROM users WHERE id = $1 AND clinic_id IS NOT DISTINCT FROM $2",
+        [req.user.id, clinicId]
+      );
+
+      if (userRes.rows.length === 0) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const doctorFullName = userRes.rows[0].full_name;
+      const doctorEmail = userRes.rows[0].email;
+
+      result = await pool.query(`
+        SELECT m.*, p.full_name as patient_name, p.id as patient_id
+        FROM medical_records m
+        JOIN patients p ON m.patient_id = p.id
+        WHERE p.is_active = true
+          AND m.clinic_id IS NOT DISTINCT FROM $1
+          AND (
+            EXISTS (
+              SELECT 1
+              FROM assignments a
+              WHERE a.patient_id = m.patient_id
+                AND a.doctor_id = $2
+                AND a.clinic_id IS NOT DISTINCT FROM $1
+            )
+            OR m.doctor_name = $3
+            OR m.doctor_name = $4
+          )
+        ORDER BY m.date DESC, m.created_at DESC
+      `, [clinicId, req.user.id, doctorFullName || null, doctorEmail]);
+    } else {
+      result = await pool.query(`
+        SELECT m.*, p.full_name as patient_name, p.id as patient_id
+        FROM medical_records m
+        JOIN patients p ON m.patient_id = p.id
+        WHERE p.is_active = true AND m.clinic_id IS NOT DISTINCT FROM $1
+        ORDER BY m.date DESC, m.created_at DESC
+      `, [clinicId]);
+    }
+
     res.json(result.rows);
   } catch (err) {
     console.error(err);

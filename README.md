@@ -1,30 +1,44 @@
 # Community Health Access & Records System (CHARS)
 
-CHARS is a full‑stack web app for community health centers to replace paper files with secure, searchable digital patient records. It centralizes registration, triage, doctor assignment, clinical records, labs, medications, allergies, immunizations, files, and audit logs so care teams can work faster with a shared source of truth.
+CHARS is a full-stack clinic management platform for community health centers. It replaces paper-based workflows with secure digital records, triage, doctor assignment, clinical history, lab tracking, medication/allergy/immunization management, patient file storage, and audit visibility.
 
-## Mission (from the codebase)
-Give community clinics a unified, secure platform that:
-- Digitizes patient intake and lifelong medical records
-- Streamlines clinical workflows (triage, doctor assignment, labs, prescriptions)
-- Improves accountability with role-based access and audit logs
-- Enables clinics to manage care across staff and patients in one system
+## Live Deployment
+- Frontend: Vercel
+- Backend: Railway
+- Production backend URL: `https://community-health-access-and-records-system-web-a-production.up.railway.app`
+
+## What The System Supports
+- Health center registration with clinic admin account creation
+- Multi-tenant clinic separation using `clinic_id`
+- Login with role-based access for `admin`, `doctor`, and `receptionist`
+- Patient registration, editing, search, status management, and profiles
+- Receptionist-led triage and doctor assignment workflows
+- Return-visit doctor assignment directly from the patient profile
+- Doctor-facing medical records review with search, filters, and full-record detail view
+- Clinical data management: records, labs, medications, allergies, immunizations, and problem list
+- Secure patient document upload and retrieval
+- Audit logging for important data changes
+
 
 ## Tech Stack
 - Frontend: React + Vite + Tailwind
 - Backend: Node.js + Express
 - Database: PostgreSQL
-- Auth: JWT + role-based permissions
+- Authentication: JWT
+- File uploads: Multer
 
-## Prerequisites
-- Node.js 18+ (recommended)
-- npm 9+ (comes with Node)
+## Project Structure
+- `frontend/`: React application
+- `backend/`: Express API, PostgreSQL setup, file uploads, and auth
+
+## Local Development
+
+### Prerequisites
+- Node.js 18+
+- npm 9+
 - PostgreSQL 14+
 
-## Setup (Every Step)
-
-### 1) Install dependencies
-From the repo root:
-
+### 1. Install dependencies
 ```powershell
 cd backend
 npm install
@@ -32,17 +46,22 @@ cd ..\frontend
 npm install
 ```
 
-### 2) Configure environment variables
+### 2. Configure environment variables
 
-#### Backend
-Create `backend/.env` from the example and edit values as needed:
-
+Backend:
 ```powershell
 cd ..\backend
 Copy-Item .env.example .env
 ```
 
-Required variables:
+Frontend:
+```powershell
+cd ..\frontend
+Copy-Item .env.example .env
+```
+
+### 3. Backend environment
+For local development, configure:
 - `DB_USER`
 - `DB_HOST`
 - `DB_NAME`
@@ -51,75 +70,96 @@ Required variables:
 - `PORT`
 - `JWT_SECRET`
 
-Optional (seed first admin on first run):
+Optional:
 - `SEED_ADMIN_EMAIL`
 - `SEED_ADMIN_PASSWORD`
 
-Note: set `DB_PORT` to whatever your Postgres is running on (default is `5432`).
+Notes:
+- Local PostgreSQL usually runs on port `5174`
+- In production on Railway, prefer `DATABASE_URL` instead of local DB variables
 
-#### Frontend
-Create `frontend/.env` from the example:
+### 4. Frontend environment
+Required:
+- `VITE_API_BASE_URL`
 
-```powershell
-cd ..\frontend
-Copy-Item .env.example .env
-```
+Optional:
+- `VITE_WS_URL`
+- `VITE_BACKEND_URL`
 
-Required variable:
-- `VITE_API_BASE_URL` (must match backend URL)
+For production, these should point to:
+`https://community-health-access-and-records-system-web-a-production.up.railway.app`
 
-### 3) Create the PostgreSQL database
-Make sure PostgreSQL is running, then create the database and (optionally) a user.
-
-Example using `psql`:
-
+### 5. Create the database locally
 ```sql
 CREATE DATABASE chars;
--- Optional: create a dedicated user
--- CREATE USER chars_user WITH PASSWORD 'your_password';
--- GRANT ALL PRIVILEGES ON DATABASE chars TO chars_user;
 ```
 
-Match these values to your `backend/.env`.
-
-### 4) Start the backend (API)
-The backend will auto-create tables on startup.
-
+### 6. Start the backend
 ```powershell
 cd ..\backend
 npm run dev
 ```
 
-By default the API runs on `http://localhost:5001`.
+Default local backend:
+`http://localhost:5001`
 
-### 5) Start the frontend (Web app)
-
+### 7. Start the frontend
 ```powershell
 cd ..\frontend
 npm run dev
 ```
 
-The frontend runs on `http://localhost:3000`.
+Default local frontend:
+`http://localhost:3000`
 
-### 6) First-time usage
-- Visit `http://localhost:3000`
-- Register a health center via the “Register Health Center” button
-- Use the created admin account to log in and add staff (doctors/receptionists)
+## Production Deployment Notes
 
-## Key Features (from the API + UI)
-- Clinic registration and multi‑tenant data separation
-- Role-based access: admin, doctor, receptionist
-- Patient registration and searchable directory
-- Triage queue and doctor assignment
-- Medical records, labs, medications, allergies, immunizations, problem list
-- Secure file uploads per patient
-- Audit logs for key actions
-- Reports summary for clinic metrics
+### Railway backend
+- Set `DATABASE_URL` from your Railway PostgreSQL service
+- Set `JWT_SECRET`
+- Do not use `localhost` for database configuration in Railway
+- The app auto-creates and updates tables on startup
 
-## Folder Structure
-- `backend/` Express API + PostgreSQL schema + uploads
-- `frontend/` React UI
+### Vercel frontend
+- Set:
+- `VITE_API_BASE_URL`
+- `VITE_WS_URL`
+- `VITE_BACKEND_URL`
+- All should point to your Railway backend URL
+
+## Role Overview
+
+### Receptionist
+- Register and manage patients
+- Record triage and intake details
+- Assign or reassign doctors
+- Use the patient profile to assign a doctor when a patient returns for treatment
+
+### Doctor
+- View assigned patients
+- Review relevant medical records
+- Update assignment progress
+- Access labs, clinical history, and patient profiles
+
+### Admin
+- Full clinic oversight
+- User management
+- Audit logs and system-level supervision
 
 ## Troubleshooting
-- If you see database connection errors, re-check `backend/.env` and ensure Postgres is running.
-- If the frontend can’t reach the API, confirm `frontend/.env` has the correct `VITE_API_BASE_URL`.
+- `ECONNREFUSED 127.0.0.1:5432` on Railway usually means `DATABASE_URL` is missing
+- If the frontend cannot reach the API, check the Vercel environment variables
+- If clinic registration returns `500`, check Railway logs for schema or database connection errors
+- If deployment succeeds but data operations fail, confirm Railway Postgres is attached to the backend service
+
+## Verification Commands
+Frontend typecheck:
+```powershell
+cd frontend
+cmd /c npm run lint
+```
+
+Backend syntax check:
+```powershell
+node --check backend\server.js
+```
