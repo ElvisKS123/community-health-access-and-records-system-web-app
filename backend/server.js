@@ -418,6 +418,7 @@ app.get("/api/audit-logs", authMiddleware, permit('admin'), async (req, res) => 
 
 // Settings / Clinics
 app.post("/api/clinics/register", upload.single('document'), validate(clinicSchema), async (req, res) => {
+  const client = await pool.connect();
   try {
     const { name, email, phone, address, contactPerson, licenseNumber, password } = req.body;
     const doc = req.file;
@@ -427,7 +428,9 @@ app.post("/api/clinics/register", upload.single('document'), validate(clinicSche
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    const result = await client.query(
       `INSERT INTO clinics 
         (name, email, phone, address, contact_person, license_number, password_hash, document_path, document_original_name, document_mimetype, document_size) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
@@ -449,16 +452,24 @@ app.post("/api/clinics/register", upload.single('document'), validate(clinicSche
 
     // Also create a user account for the clinic admin to allow login
     const userRole = 'admin';
-    await pool.query(
-      "INSERT INTO users (email, password_hash, role, clinic_id) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING",
-      [email, passwordHash, userRole, result.rows[0].id]
+    await client.query(
+      "INSERT INTO users (full_name, email, password_hash, role, clinic_id) VALUES ($1, $2, $3, $4, $5)",
+      [contactPerson, email, passwordHash, userRole, result.rows[0].id]
     );
 
+    await client.query('COMMIT');
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      console.error("Clinic registration rollback failed:", rollbackErr);
+    }
+    console.error("Clinic registration failed:", err);
     if (err.code === '23505') return res.status(409).json({ error: 'Clinic with this email already exists.' });
     res.status(500).json({ error: err.message || "Server error" });
+  } finally {
+    client.release();
   }
 });
 

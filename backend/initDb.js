@@ -280,6 +280,7 @@ const createTables = async () => {
     console.log("Tables created and updated for multi-tenancy successfully");
   } catch (err) {
     console.error("Error creating tables:", err);
+    throw err;
   }
 };
 
