@@ -173,6 +173,7 @@ export default function App() {
             </RequireAuth>
           }
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
